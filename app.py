@@ -235,13 +235,148 @@ def process_workbook(stream):
 
 HTML = """
 <!doctype html>
-<title>Ģenerēt nākamo mēnesi</title>
-<h2>Augšupielādē Excel failu (esošais mēnesis)</h2>
-<form action="/" method="post" enctype="multipart/form-data">
-    <input type="file" name="file">
-    <input type="submit" value="Ģenerēt nākamo mēnesi">
-</form>
-<p>Piezīme: fails netiek saglabāts uz servera.</p>
+<html lang="lv">
+<head>
+<meta charset="UTF-8">
+<title>Excel ģenerators – nākamais mēnesis</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f2f4f7;
+        padding: 40px;
+        display: flex;
+        justify-content: center;
+    }
+    .container {
+        max-width: 480px;
+        width: 100%;
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    h2 {
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+    .upload-box {
+        border: 2px dashed #6c8df5;
+        padding: 20px;
+        border-radius: 10px;
+        background: #f8faff;
+        cursor: pointer;
+        color: #6c7a89;
+        transition: 0.2s;
+    }
+    .upload-box:hover {
+        border-color: #456df0;
+        background: #f1f5ff;
+    }
+    #fileInput {
+        display: none;
+    }
+    .file-name {
+        margin-top: 10px;
+        font-style: italic;
+        color: #333;
+    }
+    button {
+        margin-top: 20px;
+        padding: 12px 30px;
+        background: #456df0;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        color: white;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    button:hover {
+        background: #2f4ec7;
+    }
+    p.note {
+        margin-top: 15px;
+        color: #666;
+        font-size: 13px;
+    }
+    form {
+        height: 200px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px; /* attālums starp elementiem */
+    }
+
+        input[type="file"] {
+        max-width: 300px;
+    }
+    .note {
+        font-size: 0.9em;
+        color: #666;
+    }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Ģenerēt nākamo mēnesi</h2>
+
+    <form action="/" method="post" enctype="multipart/form-data">
+
+        <label for="fileInput" class="upload-box" id="dropArea">
+            Klikšķini vai ievelc Excel failu (.xlsx)
+        </label>
+
+        <input type="file" id="fileInput" name="file" accept=".xlsx">
+
+        <div class="file-name" id="fileName"></div>
+
+        <button type="submit">Ģenerēt</button>
+    </form>
+</div>
+
+<script>
+// Faila nosaukuma parādīšana
+const fileInput = document.getElementById("fileInput");
+const fileName = document.getElementById("fileName");
+
+fileInput.addEventListener("change", () => {
+    if (fileInput.files.length > 0) {
+        fileName.textContent = "Izvēlēts fails: " + fileInput.files[0].name;
+    }
+});
+
+// Drag & Drop
+const dropArea = document.getElementById("dropArea");
+
+dropArea.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropArea.style.background = "#e8edff";
+});
+
+dropArea.addEventListener("dragleave", () => {
+    dropArea.style.background = "#f8faff";
+});
+
+dropArea.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropArea.style.background = "#f8faff";
+
+    const file = e.dataTransfer.files[0];
+
+    // Atļaujam tikai .xlsx
+    if (file && file.name.toLowerCase().endsWith(".xlsx")) {
+        fileInput.files = e.dataTransfer.files;
+        fileName.textContent = "Izvēlēts fails: " + file.name;
+    } else {
+        fileName.textContent = "❌ Atļauti tikai .xlsx faili";
+    }
+});
+</script>
+
+</body>
+</html>
 """
 
 @app.route("/", methods=["GET", "POST"])
