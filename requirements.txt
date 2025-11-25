@@ -1,0 +1,4 @@
+flask
+openpyxl
+holidays
+gunicorn
