@@ -53,7 +53,8 @@ def find_workers(ws, start_row):
         v = ws.cell(row=r, column=1).value
         if v is None:
             break
-        if re.match(r"^\d+\.$", str(v).strip()):
+        # Regex tagad pieņem gan "5." gan "5"
+        if re.match(r"^\d+\.?$", str(v).strip()):
             workers.append(r)
         else:
             break
