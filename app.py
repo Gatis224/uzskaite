@@ -1,4 +1,5 @@
 # app.py
+from fileinput import filename
 import re
 import calendar
 import io
@@ -29,7 +30,8 @@ def next_month(year, month):
     return (year + 1, 1) if month == 12 else (year, month + 1)
 
 def find_header_cell(ws):
-    pattern = re.compile(r"(\d{4})\.(\w+)", re.IGNORECASE)
+    # Atbalsta gan "YYYY.month", gan "YYYY. month" (ar vai bez atstarpes)
+    pattern = re.compile(r"(\d{4})\.\s*(\w+)", re.IGNORECASE)
     for r in range(1, 15):
         for c in range(1, ws.max_column + 1):
             v = ws.cell(row=r, column=c).value
@@ -37,7 +39,7 @@ def find_header_cell(ws):
                 m = pattern.search(v.strip())
                 if m:
                     return r, c, v.strip()
-    raise ValueError("Nevar atrast virsrakstu, kur ir 'YYYY.month'")
+    raise ValueError("Nevar atrast virsrakstu, kur ir 'YYYY.month' vai 'YYYY. month'")
 
 def find_day_row(ws):
     for r in range(1, 40):
@@ -60,7 +62,7 @@ def find_workers(ws, start_row):
             break
     return workers
 
-def process_workbook(stream):
+def process_workbook(stream, filename):
     wb = load_workbook(stream)
     ws = wb.active
 
@@ -68,7 +70,9 @@ def process_workbook(stream):
     # 1) Atrodam mēnesi un gadu
     # =======================
     h_row, h_col, h_text = find_header_cell(ws)
-    m = re.search(r"(\d{4})\.(\w+)", h_text)
+    m = re.search(r"(\d{4})\.\s*(\w+)", h_text, re.IGNORECASE)
+    if not m:
+        raise ValueError(f"Nevar atrast gadu un mēnesi virsrakstā: {h_text}")
     year = int(m.group(1))
     mstr = m.group(2).lower()
 
@@ -223,7 +227,11 @@ def process_workbook(stream):
     # =======================
     # 8) Saglabā
     # =======================
-    outname = f"{LATV_MONTHS[nm]}_Kanceleja_{ny}.xlsx"
+    dep = "Departaments"
+    if filename:
+        dep = filename.split("_")[1]  # ņem pirmo daļu pirms "_"
+
+    outname = f"{LATV_MONTHS[nm]}_{dep}_{ny}.xlsx"
     bio = io.BytesIO()
     wb.save(bio)
     bio.seek(0)
@@ -387,7 +395,7 @@ def index():
         if not f:
             return "Nav augšupielādēta faila", 400
         try:
-            data, filename = process_workbook(f.stream)
+            data, filename = process_workbook(f.stream, f.filename)
         except Exception as e:
             return f"Kļūda apstrādājot failu: {e}", 500
 
